@@ -18,7 +18,7 @@ def extract_data(url):
         response.raise_for_status()
 
         data = response.json()
-        data_json = json.dumps(data)
+        data_json = json.dumps(data, ensure_ascii=False, indent=2)
 
         logger.info("Extraction completed successfully")
         return data_json

@@ -13,7 +13,8 @@ def load_data(bucket_name, file_name, data_json):
         s3.put_object(
             Bucket=bucket_name,
             Key=file_name,
-            Body=data_json
+            Body=data_json,
+            ContentType="application/json"
         )
 
         date = datetime.now().date()
@@ -22,4 +23,4 @@ def load_data(bucket_name, file_name, data_json):
 
     except Exception as e:
         logger.exception("Error uploading file to S3: %s", e)
-        
+        raise

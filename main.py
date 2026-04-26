@@ -11,7 +11,11 @@ def main():
     try:
         load_dotenv()
         now = datetime.now()
+
         bucket_name = os.getenv('S3_BUCKET_NAME')
+        if not bucket_name:
+            raise ValueError("S3_BUCKET_NAME environment variable is not set")
+        
         url = "https://jsonplaceholder.typicode.com/posts"
 
         file_name = f'marketing_data/raw/jsonplaceholder/year={now.year}/month={now.month:02d}/data_{now.strftime("%Y%m%d_%H%M%S")}.json'

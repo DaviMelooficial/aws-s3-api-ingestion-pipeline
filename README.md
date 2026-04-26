@@ -1,4 +1,4 @@
-# S3 Loader
+# AWS S3 API Ingestion Pipeline
 
 ## Project Objective
 
@@ -15,6 +15,18 @@ The main goal is to provide a lightweight and practical ETL-style foundation for
 5. Writes execution logs to both console and file.
 
 ## Current Architecture
+
+## Data Flow
+
+```text
+Public API
+  ↓
+Python Extractor
+  ↓
+AWS S3 Raw Layer
+  ↓
+Future: Snowflake + dbt
+```
 
 - `main.py`
   - Orchestrates the pipeline execution.
