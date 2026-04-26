@@ -1,6 +1,9 @@
 import boto3
-import json
 from datetime import datetime
+from services.logger_config import setup_logger
+
+
+logger = setup_logger(__name__)
 
 def load_data(bucket_name, file_name, data_json):
 
@@ -15,8 +18,8 @@ def load_data(bucket_name, file_name, data_json):
 
         date = datetime.now().date()
 
-        print(f"Archive {date} loaded!")
+        logger.info("File successfully uploaded on %s: %s", date, file_name)
 
     except Exception as e:
-        print(f"Error loading archive: {e}")
+        logger.exception("Error uploading file to S3: %s", e)
         
