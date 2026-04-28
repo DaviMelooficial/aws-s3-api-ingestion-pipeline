@@ -2,19 +2,17 @@
 
 ## Project Objective
 
-S3 Loader is a simple data ingestion pipeline that extracts JSON data from a public API and stores it in an Amazon S3 bucket using a partitioned path structure.
+S3 Loader is a lightweight ingestion pipeline that extracts JSON data from a public API and stores it in Amazon S3 using a partitioned raw-layer structure.
 
-The main goal is to provide a lightweight and practical ETL-style foundation for analytics workflows, where raw data is collected and organized for later processing.
+The goal is to provide a practical foundation for analytics engineering workflows and prepare the next step toward Snowflake + dbt modeling.
 
-## What This Project Does
+## Current Progress
 
-1. Calls an API endpoint (`https://jsonplaceholder.typicode.com/posts`).
-2. Validates HTTP responses and raises errors for failed requests.
-3. Converts the response payload to JSON text.
-4. Uploads the file to S3 using a time-based folder structure.
-5. Writes execution logs to both console and file.
-
-## Current Architecture
+1. API extraction implemented with timeout and HTTP status validation.
+2. Centralized logging implemented with console and file output.
+3. Rotating log files implemented to control log growth.
+4. S3 upload implemented with `ContentType="application/json"`.
+5. Environment variable validation implemented for `S3_BUCKET_NAME`.
 
 ## Data Flow
 
@@ -25,26 +23,36 @@ Python Extractor
   ↓
 AWS S3 Raw Layer
   ↓
-Future: Snowflake + dbt
+Snowflake Raw Layer
+  ↓
+dbt Transformations
+  ↓
+Analytics Models / Mart Layer
 ```
 
+## Architecture
+
 - `main.py`
-  - Orchestrates the pipeline execution.
+  - Orchestrates pipeline execution.
   - Loads environment variables.
-  - Builds the S3 file path.
-  - Calls extraction and load services.
+  - Validates `S3_BUCKET_NAME` before running.
+  - Builds the partitioned S3 key and triggers extract/load.
 
 - `services/extract.py`
-  - Handles API requests.
-  - Validates status codes with `raise_for_status()`.
-  - Returns serialized JSON data.
+  - Calls the source API with a 10-second timeout.
+  - Logs status code and response reason.
+  - Uses `raise_for_status()` to fail fast on HTTP errors.
+  - Returns serialized JSON payload.
 
 - `services/load.py`
-  - Sends data to Amazon S3 via `boto3`.
+  - Uploads data to Amazon S3 via `boto3`.
+  - Sets JSON content type on uploaded objects.
+  - Logs success and raises errors on failure.
 
 - `services/logger_config.py`
-  - Configures centralized logging.
-  - Logs are written to `logs/app.log` with rotation.
+  - Central logger configuration.
+  - Writes logs to terminal and `logs/app.log`.
+  - Uses rotation: max 1 MB per file, 3 backups.
 
 ## Folder Structure
 
@@ -64,40 +72,41 @@ S3_loader/
 ## Requirements
 
 - Python 3.10+
-- AWS credentials configured locally (AWS CLI profile, environment variables, or IAM role)
-- An existing S3 bucket
+- AWS credentials configured locally (profile, environment variables, or IAM role)
+- Existing S3 bucket
 
-Dependencies are listed in `requirements.txt`:
+Dependencies in `requirements.txt`:
 - `boto3`
 - `requests`
 - `python-dotenv`
 
 ## Setup
 
-1. Create and activate a virtual environment (recommended).
+1. Create and activate a virtual environment.
 2. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Configure your environment variables.
+3. Configure environment variables.
 
-Example `.env`:
+Use `.env.example` as reference:
 
 ```env
-S3_BUCKET_NAME=your-bucket-name
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=
+S3_BUCKET_NAME=
 ```
 
-## How to Run
+## Run
 
 ```bash
 python main.py
 ```
 
-## Output in S3
-
-Files are uploaded with a partition-like path pattern:
+## S3 Output Pattern
 
 ```text
 marketing_data/raw/jsonplaceholder/year=YYYY/month=MM/data_YYYYMMDD_HHMMSS.json
@@ -111,8 +120,21 @@ marketing_data/raw/jsonplaceholder/year=2026/month=04/data_20260426_101530.json
 
 ## Logging and Error Handling
 
-- Logs are emitted to:
-  - Console
-  - `logs/app.log`
-- HTTP errors and unexpected exceptions are logged with stack traces.
-- Log files use rotation to avoid unlimited growth.
+- Logs are emitted to console and `logs/app.log`.
+- HTTP and runtime exceptions are logged with stack traces.
+- Errors are re-raised to fail the pipeline clearly.
+
+## dbt Section
+
+- dbt profile configured for Snowflake.
+- Profile name: `placeholders_pipeline`.
+- Target: `dev`.
+- Authentication configured with private key (`private_key_path`).
+- Current direction: use S3 raw data as source for future Snowflake + dbt models.
+
+## Roadmap
+
+1. Add retry and exponential backoff for transient API/S3 failures.
+2. Add automated tests for extraction and loading modules.
+3. Add ingestion metadata such as run id and record count.
+4. Build curated models in Snowflake + dbt.
