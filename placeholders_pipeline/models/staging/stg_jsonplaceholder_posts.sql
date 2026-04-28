@@ -5,4 +5,4 @@ SELECT
     raw_data:body::STRING AS body,
     source_file,
     loaded_at
-FROM JSONPLACEHOLDER_PIPELINE_DB.RAW.JSONPLACEHOLDER_RAW
+FROM {{ source('raw', 'jsonplaceholder_raw') }}

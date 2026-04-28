@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: raw
+    database: JSONPLACEHOLDER_PIPELINE_DB
+    schema: RAW
+    tables:
+      - name: JSONPLACEHOLDER_RAW
+        description: "Raw JSON data loaded from AWS S3 into Snowflake."

@@ -18,5 +18,7 @@ models:
   placeholders_pipeline:
     staging:
       +schema: STAGING
+      +materialized: view
     mart:
       +schema: MART
+      +materialized: table
