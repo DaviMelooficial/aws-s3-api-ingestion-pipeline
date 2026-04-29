@@ -6,6 +6,21 @@ S3 Loader is a lightweight ingestion pipeline that extracts JSON data from a pub
 
 The goal is to provide a practical foundation for analytics engineering workflows and prepare the next step toward Snowflake + dbt modeling.
 
+## Why This Project Exists
+
+This project exists to provide a simple and reproducible end-to-end pipeline from data extraction to analytics modeling.
+It bridges the gap between raw API ingestion and analytics-ready datasets by organizing data in layers and adding observability from the start.
+
+## Problem It Solves
+
+Without a structured ingestion flow, raw API data often becomes hard to trace, validate, and transform.
+This pipeline solves that by:
+
+1. Standardizing ingestion into an S3 raw layer.
+2. Applying a clear layered architecture toward Snowflake + dbt.
+3. Enabling data lineage visibility and model documentation with dbt Docs.
+4. Improving operational reliability with centralized logging and explicit failure behavior.
+
 ## Current Progress
 
 1. API extraction implemented with timeout and HTTP status validation.
@@ -30,6 +45,16 @@ dbt Transformations
 Analytics Models / Mart Layer
 ```
 
+## Architecture Clarity
+
+The project follows a layered architecture with explicit responsibilities:
+
+1. Ingestion Layer: Python extractor and S3 loader.
+2. Storage Layer: S3 raw zone with partitioned object paths.
+3. Warehouse Layer: Snowflake raw/staging structures.
+4. Transformation Layer: dbt models and tests.
+5. Consumption Layer: analytics marts for BI and reporting.
+
 ## Architecture
 
 - `main.py`
@@ -53,6 +78,15 @@ Analytics Models / Mart Layer
   - Central logger configuration.
   - Writes logs to terminal and `logs/app.log`.
   - Uses rotation: max 1 MB per file, 3 backups.
+
+## Tooling Decisions
+
+1. Python: lightweight orchestration and API ingestion.
+2. Requests: straightforward HTTP handling with `raise_for_status()` support.
+3. Boto3: native AWS SDK integration for S3 uploads.
+4. Snowflake: scalable cloud warehouse for analytical workloads.
+5. dbt: modular SQL transformations, testing, documentation, and lineage.
+6. Rotating logs: operational observability with controlled file size.
 
 ## Folder Structure
 
@@ -131,6 +165,29 @@ marketing_data/raw/jsonplaceholder/year=2026/month=04/data_20260426_101530.json
 - Target: `dev`.
 - Authentication configured with private key (`private_key_path`).
 - Current direction: use S3 raw data as source for future Snowflake + dbt models.
+
+## dbt Docs Visualization
+
+You can explore model documentation and lineage graph locally with dbt Docs.
+
+1. Generate metadata files:
+
+```bash
+dbt docs generate
+```
+
+2. Start the documentation server:
+
+```bash
+dbt docs serve
+```
+
+After starting the server, you can visualize:
+
+1. Model lineage (DAG) and dependencies.
+2. Model, source, and column descriptions.
+3. Test coverage and model-level metadata.
+4. Database objects materialized by dbt.
 
 ## Roadmap
 
